@@ -1,0 +1,779 @@
+<%- include('partials/header') %>
+
+<div id="screen-app" class="min-h-screen flex flex-col">
+
+  <!-- NAVBAR -->
+  <nav class="navbar px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <button id="mobile-menu-btn" class="md:hidden text-slate-400 hover:text-white transition-colors mr-2" onclick="toggleMobileSidebar()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg border border-neon-green flex items-center justify-center" style="box-shadow:0 0 10px rgba(0,255,135,0.3)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="#00FF87"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="#00FF87" stroke-width="1.5" fill="none" stroke-dasharray="4 2"/></svg>
+        </div>
+        <span class="font-bold text-white text-lg font-display">Node<span style="color:var(--neon-green)">Watch</span></span>
+      </div>
+      <!-- Live indicator -->
+      <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full" style="background:rgba(0,255,135,0.08);border:1px solid rgba(0,255,135,0.2);">
+        <div class="relative"><div class="status-dot up"></div><div class="ping-ring"></div></div>
+        <span class="text-xs font-mono" style="color:var(--neon-green)">SİSTEM ÇEVRİMİÇİ</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- User -->
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);">
+        <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style="background:linear-gradient(135deg,var(--neon-green),var(--neon-cyan));color:#040B14;" id="nav-avatar">
+          <%= user.username[0].toUpperCase() %>
+        </div>
+        <span class="text-sm font-medium text-slate-200" id="nav-username"><%= user.username %></span>
+        <% if (user.role === 'superadmin') { %>
+          <span id="nav-role-badge" class="badge-yellow text-xs">SÜPER ADMİN</span>
+        <% } else { %>
+          <span id="nav-role-badge" class="badge-green text-xs">KULLANICI</span>
+        <% } %>
+      </div>
+      <a href="/auth/logout" class="btn-red py-2 px-3 text-xs text-center" style="display: inline-block;">Çıkış</a>
+    </div>
+  </nav>
+
+  <!-- BODY -->
+  <div class="flex flex-1">
+    <!-- Sidebar Backdrop for Mobile -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="toggleMobileSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="main-sidebar" class="sidebar flex flex-col pt-4 pb-6">
+      <div class="space-y-1 px-0 flex-1">
+        <a onclick="showPage('dashboard')" id="nav-dashboard" class="nav-item active">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <a onclick="showPage('sites')" id="nav-sites" class="nav-item">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          İzlenen Siteler
+        </a>
+        <a onclick="showPage('telegram')" id="nav-telegram" class="nav-item">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Telegram Bot
+        </a>
+        <% if (user.role === 'superadmin') { %>
+          <div id="nav-admin-wrapper">
+            <div class="px-5 pt-4 pb-1">
+              <p class="text-xs font-mono text-slate-700 uppercase tracking-widest">Yönetim</p>
+            </div>
+            <a href="/admin" id="nav-admin" class="nav-item" style="color:#FFE600;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Süper Admin Paneli
+            </a>
+          </div>
+        <% } %>
+      </div>
+      <!-- Bottom -->
+      <div class="px-4 mt-4">
+        <div class="p-3 rounded-xl" style="background:rgba(0,255,135,0.04);border:1px solid rgba(0,255,135,0.1);">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono text-slate-500">Site Limiti</span>
+            <span class="text-xs font-mono" style="color:var(--neon-green)" id="sidebar-limit">
+              <%= monitors.length %> / <%= user.monitor_limit === 999 ? '∞' : user.monitor_limit %>
+            </span>
+          </div>
+          <div class="h-1.5 rounded-full" style="background:rgba(255,255,255,0.08);">
+            <div id="limit-bar" class="h-1.5 rounded-full transition-all" style="background:linear-gradient(90deg,var(--neon-green),var(--neon-cyan)); width: <%= user.monitor_limit === 999 ? 100 : Math.min(100, (monitors.length / user.monitor_limit) * 100) %>%; box-shadow:0 0 8px rgba(0,255,135,0.5);"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- PAGE CONTENT -->
+    <main class="flex-1 overflow-y-auto p-6">
+
+      <!-- ══ PAGE: DASHBOARD ══ -->
+      <div id="page-dashboard">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h1 class="text-2xl font-bold text-white font-display">Dashboard</h1>
+            <p class="text-sm font-mono text-slate-500 mt-1">// Hoş geldin, <%= user.username %> · <span id="dash-time"></span></p>
+          </div>
+          <button onclick="openModal('add-site-modal')" class="btn-neon-solid flex items-center gap-2">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Site Ekle
+          </button>
+        </div>
+
+        <!-- Stat Cards -->
+        <%
+          let upMonitors = monitors.filter(m => m.last_status === 'UP').length;
+          let downMonitors = monitors.filter(m => m.last_status === 'DOWN').length;
+          let totalPings = 0;
+          let upPings = 0;
+          monitors.forEach(m => {
+            totalPings += m.total_count || 0;
+            upPings += m.up_count || 0;
+          });
+          let averageUptime = totalPings > 0 ? ((upPings / totalPings) * 100).toFixed(1) : '100.0';
+        %>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div class="stat-card animate-fade-up" style="animation-delay:0s">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono text-slate-500 uppercase tracking-wider">İzlenen</span>
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(0,245,255,0.1);">
+                <svg width="14" height="14" style="color:var(--neon-cyan)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10z"/></svg>
+              </div>
+            </div>
+            <div class="text-3xl font-bold font-mono mb-1" style="color:var(--neon-cyan)">
+              <%= monitors.length %><span class="text-lg text-slate-600"> / <%= user.monitor_limit === 999 ? '∞' : user.monitor_limit %></span>
+            </div>
+            <div class="text-xs text-slate-500 font-mono">Mevcut / Limit</div>
+          </div>
+          <div class="stat-card animate-fade-up" style="animation-delay:0.1s">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono text-slate-500 uppercase tracking-wider">Aktif</span>
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(0,255,135,0.1);">
+                <div class="status-dot up"></div>
+              </div>
+            </div>
+            <div class="text-3xl font-bold font-mono mb-1 text-glow-green" style="color:var(--neon-green)"><%= upMonitors %></div>
+            <div class="text-xs text-slate-500 font-mono">Çevrimiçi site</div>
+          </div>
+          <div class="stat-card <%= downMonitors > 0 ? 'glass-card-red' : '' %> animate-fade-up" style="animation-delay:0.2s">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono text-slate-500 uppercase tracking-wider">Çökmüş</span>
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,51,102,0.1);">
+                <div class="status-dot down"></div>
+              </div>
+            </div>
+            <div class="text-3xl font-bold font-mono mb-1 text-glow-red" style="color:var(--alert-red)"><%= downMonitors %></div>
+            <div class="text-xs text-slate-500 font-mono">Çevrimdışı site</div>
+          </div>
+          <div class="stat-card animate-fade-up" style="animation-delay:0.3s">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono text-slate-500 uppercase tracking-wider">Ortalama Uptime</span>
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(0,255,135,0.1);">
+                <svg width="14" height="14" style="color:var(--neon-green)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+            </div>
+            <div class="text-3xl font-bold font-mono mb-1 text-glow-green" style="color:var(--neon-green)"><%= averageUptime %><span class="text-lg">%</span></div>
+            <div class="text-xs text-slate-500 font-mono">Toplam loglanan</div>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="glass-card p-6 mb-6 animate-fade-up" style="animation-delay:0.4s;">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="font-bold text-white font-display">Tepki Süresi Grafiği</h2>
+              <p class="text-xs font-mono text-slate-500 mt-0.5">Son 24 ping · ms cinsinden</p>
+            </div>
+            <div class="flex gap-2 overflow-x-auto max-w-md pb-2" id="chart-buttons">
+              <% monitors.forEach((m, idx) => { %>
+                <button class="btn-ghost text-xs <%= idx === 0 ? 'active' : '' %>" 
+                        id="chart-btn-<%= m.id %>" 
+                        onclick="loadChartData('<%= m.id %>', this)"
+                        <% if(idx === 0) { %> style="color:var(--neon-green);border-color:rgba(0,255,135,0.3);" <% } %>>
+                  <%= m.name %>
+                </button>
+              <% }) %>
+              <% if (monitors.length === 0) { %>
+                <span class="text-xs font-mono text-slate-500">Site bulunmuyor</span>
+              <% } %>
+            </div>
+          </div>
+          <div class="relative h-56 terminal-scanline">
+            <canvas id="response-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Quick Sites on Dashboard -->
+        <div class="glass-card p-6 animate-fade-up" style="animation-delay:0.5s;">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-bold text-white font-display">Hızlı Durum</h2>
+            <button onclick="showPage('sites')" class="text-xs font-mono hover:underline" style="color:var(--neon-green)">Tümünü Gör →</button>
+          </div>
+          <div id="quick-sites" class="space-y-3">
+            <% if(monitors.length === 0) { %>
+              <div class="text-center py-6 font-mono text-slate-500 text-sm">Hiç izlenen site bulunmuyor. Site Ekle butonuna tıklayarak ilk sitenizi ekleyin.</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PAGE: SITES ══ -->
+      <div id="page-sites" class="hidden">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h1 class="text-2xl font-bold text-white font-display">İzlenen Siteler</h1>
+            <p class="text-sm font-mono text-slate-500 mt-1">// Tüm monitör noktaları</p>
+          </div>
+          <button onclick="openModal('add-site-modal')" class="btn-neon-solid flex items-center gap-2">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Site Ekle
+          </button>
+        </div>
+        <div id="sites-list" class="space-y-4">
+          <% if(monitors.length === 0) { %>
+            <div class="glass-card p-8 text-center font-mono text-slate-500">Kayıtlı izlenen site bulunamadı.</div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- ══ PAGE: TELEGRAM ══ -->
+      <div id="page-telegram" class="hidden">
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-white font-display">Telegram Bot Yönetimi</h1>
+          <p class="text-sm font-mono text-slate-500 mt-1">// Bot entegrasyonu ve komut rehberi</p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+          <!-- Config Card -->
+          <div class="glass-card p-6" style="border-color:rgba(0,245,255,0.15);">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.2);">
+                <svg width="18" height="18" style="color:var(--neon-cyan)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </div>
+              <div>
+                <h3 class="font-bold text-white font-display">Bot Yapılandırması</h3>
+                <p class="text-xs font-mono text-slate-500">@BotFather üzerinden alınan token</p>
+              </div>
+            </div>
+
+            <form action="/telegram/settings" method="POST" class="space-y-4">
+              <div>
+                <label class="block text-xs font-mono mb-2 uppercase tracking-wider" style="color:var(--neon-cyan)">Bot Token</label>
+                <input type="password" name="bot_token" class="glass-input" placeholder="1234567890:ABCDefGhIJKlmNoPQRsTUVwxyZ" value="<%= telegramSettings.bot_token %>" required>
+              </div>
+              <div>
+                <label class="block text-xs font-mono mb-2 uppercase tracking-wider" style="color:var(--neon-cyan)">Chat ID</label>
+                <input type="text" name="chat_id" class="glass-input" placeholder="-1001234567890 veya 12345678" value="<%= telegramSettings.chat_id %>" required>
+              </div>
+
+              <button type="submit" class="btn-neon-solid w-full py-3">Bot'u Kaydet & Test Mesajı Gönder</button>
+            </form>
+          </div>
+
+          <!-- Commands Card -->
+          <div>
+            <div class="mb-4 flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full" style="background:var(--neon-cyan);box-shadow:0 0 8px var(--neon-cyan);"></div>
+              <h3 class="font-bold text-white font-display">Bot Komut Kılavuzu</h3>
+            </div>
+            <div class="space-y-3">
+              <div class="cmd-card">
+                <div class="flex items-start gap-3">
+                  <code class="text-base font-bold" style="color:var(--neon-cyan);font-family:'JetBrains Mono',monospace;">/status</code>
+                  <div class="flex-1">
+                    <p class="text-sm text-slate-200 font-medium mb-1">Tüm Sitelerin Durumu</p>
+                    <p class="text-xs text-slate-500 font-mono">Sistemdeki tüm izlenen sitelerin anlık durumunu Telegram'dan listeler. Her site için durum, son tepki süresi ve uptime oranı gösterilir.</p>
+                    <div class="mt-3 p-2 rounded-lg text-xs font-mono text-slate-400" style="background:rgba(0,0,0,0.3);">
+                      <span style="color:var(--neon-green)">✓</span> google.com — 142ms — %100<br>
+                      <span style="color:var(--alert-red)">🚨</span> myapi.io — TIMEOUT — %94
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="cmd-card">
+                <div class="flex items-start gap-3">
+                  <code class="text-base font-bold" style="color:var(--neon-cyan);font-family:'JetBrains Mono',monospace;">/ping</code>
+                  <div class="flex-1">
+                    <p class="text-sm text-slate-200 font-medium mb-1">Anlık Ping Testi</p>
+                    <p class="text-xs text-slate-500 font-mono">Botun izleme sunucusu ile iletişim durumunu kontrol eder.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="cmd-card">
+                <div class="flex items-start gap-3">
+                  <code class="text-base font-bold" style="color:var(--neon-cyan);font-family:'JetBrains Mono',monospace;">/help</code>
+                  <div class="flex-1">
+                    <p class="text-sm text-slate-200 font-medium mb-1">Komut Listesi</p>
+                    <p class="text-xs text-slate-500 font-mono">Kullanılabilir tüm komutları ve açıklamalarını listeler.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════ -->
+
+<!-- Add Site Modal -->
+<div id="add-site-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h3 class="text-xl font-bold text-white font-display">Yeni Site Ekle</h3>
+        <p class="text-xs font-mono text-slate-500 mt-1">Uptime izlemesi başlat</p>
+      </div>
+      <button onclick="closeModal('add-site-modal')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white transition-colors" style="background:rgba(255,255,255,0.06);">✕</button>
+    </div>
+    
+    <form action="/monitors" method="POST" class="space-y-4">
+      <div>
+        <label class="block text-xs font-mono text-slate-400 mb-2 uppercase tracking-wider">Site Adı</label>
+        <input type="text" name="name" class="glass-input" placeholder="Örn: Şirket Websitesi" required>
+      </div>
+      <div>
+        <label class="block text-xs font-mono text-slate-400 mb-2 uppercase tracking-wider">URL</label>
+        <input type="url" name="url" class="glass-input" placeholder="https://example.com" required>
+      </div>
+      <div>
+        <label class="block text-xs font-mono text-slate-400 mb-2 uppercase tracking-wider">Kontrol Sıklığı</label>
+        <select name="check_interval" class="glass-input">
+          <option value="1">Her 1 dakikada bir</option>
+          <option value="5" selected>Her 5 dakikada bir</option>
+          <option value="15">Her 15 dakikada bir</option>
+        </select>
+      </div>
+      <div class="p-4 rounded-xl" style="background:rgba(0,245,255,0.03);border:1px solid rgba(0,245,255,0.12);">
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="14" height="14" style="color:var(--neon-cyan)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span class="text-xs font-mono uppercase tracking-wider" style="color:var(--neon-cyan)">Telegram Bildirimi</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-slate-300">Bu site için bildirim al</span>
+          <label class="toggle-switch"><input type="checkbox" name="enable_telegram" checked><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button type="button" onclick="closeModal('add-site-modal')" class="btn-ghost flex-1 py-3">İptal</button>
+        <button type="submit" class="btn-neon-solid flex-1 py-3">Siteyi Ekle</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Site Modal -->
+<div id="edit-site-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-bold text-white font-display">Site Düzenle</h3>
+      <button onclick="closeModal('edit-site-modal')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white" style="background:rgba(255,255,255,0.06);">✕</button>
+    </div>
+    
+    <form id="edit-form" action="" method="POST" class="space-y-4">
+      <div>
+        <label class="block text-xs font-mono text-slate-400 mb-2 uppercase tracking-wider">Site Adı</label>
+        <input type="text" id="edit-site-name" name="name" class="glass-input" required>
+      </div>
+      <div>
+        <label class="block text-xs font-mono text-slate-400 mb-2 uppercase tracking-wider">URL</label>
+        <input type="url" id="edit-site-url" name="url" class="glass-input" required>
+      </div>
+      <div>
+        <label class="block text-xs font-mono text-slate-400 mb-2 uppercase tracking-wider">Kontrol Sıklığı</label>
+        <select id="edit-site-freq" name="check_interval" class="glass-input">
+          <option value="1">Her 1 dakikada bir</option>
+          <option value="5">Her 5 dakikada bir</option>
+          <option value="15">Her 15 dakikada bir</option>
+        </select>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button type="button" onclick="closeModal('edit-site-modal')" class="btn-ghost flex-1 py-3">İptal</button>
+        <button type="submit" class="btn-neon-solid flex-1 py-3">Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Ping Result Modal -->
+<div id="ping-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width:400px;text-align:center;">
+    <div id="ping-content"></div>
+    <button onclick="closeModal('ping-modal')" class="btn-ghost mt-6 px-8">Kapat</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// Load serverside monitors array directly
+let SITES = <%- JSON.stringify(monitors) %>;
+let responseChart = null;
+
+function renderSites() {
+  const container = document.getElementById('sites-list');
+  if (SITES.length === 0) {
+    container.innerHTML = '<div class="glass-card p-8 text-center font-mono text-slate-500">Kayıtlı izlenen site bulunamadı.</div>';
+    return;
+  }
+  container.innerHTML = SITES.map(site => {
+    const isUp = site.last_status === 'UP';
+    const statusClass = site.last_status.toLowerCase();
+    const pingText = site.last_ping !== null ? `${site.last_ping}ms` : 'TIMEOUT';
+    
+    let uptimePct = 100;
+    if (site.total_count > 0) {
+      uptimePct = Math.round((site.up_count / site.total_count) * 100);
+    }
+
+    const bars = site.history.map(s => `<div class="uptime-bar ${s}" title="${s}"></div>`).join('');
+
+    return `
+    <div class="glass-card p-5 ${isUp ? '' : 'glass-card-red'} transition-all" id="site-card-${site.id}">
+      <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="relative flex-shrink-0">
+            <div class="status-dot ${statusClass}"></div>
+            ${isUp ? '<div class="ping-ring"></div>' : ''}
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-bold text-white font-display">${site.name}</span>
+              <span class="${isUp ? 'badge-green' : 'badge-red'}">${site.last_status}</span>
+              <span class="badge-yellow text-xs">/ ${site.check_interval}dk</span>
+            </div>
+            <a href="${site.url}" target="_blank" class="text-xs font-mono text-slate-500 hover:text-slate-300 transition-colors break-all">${site.url}</a>
+          </div>
+        </div>
+        <div class="flex items-center gap-6 sm:text-right">
+          <div>
+            <div class="text-xs font-mono text-slate-600 mb-0.5">Tepki</div>
+            <div class="font-mono font-bold text-sm ${isUp ? '' : 'text-red-400'}">${pingText}</div>
+          </div>
+          <div>
+            <div class="text-xs font-mono text-slate-600 mb-0.5">Uptime</div>
+            <div class="font-mono font-bold text-sm" style="color:${uptimePct > 98 ? 'var(--neon-green)' : uptimePct > 90 ? '#FFE600' : 'var(--alert-red)'}">${uptimePct}%</div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+          <span class="text-xs font-mono text-slate-600">Son 30 Kontrol</span>
+          <div class="flex gap-2">
+            <button onclick="openEdit(${site.id})" class="btn-ghost text-xs" style="padding:4px 12px;">Düzenle</button>
+            <button onclick="doPing(${site.id})" class="btn-neon text-xs" style="padding:4px 12px;">Ping</button>
+            <button onclick="deleteSite(${site.id})" class="btn-red text-xs" style="padding:4px 12px;">Sil</button>
+          </div>
+        </div>
+        <div class="flex gap-0.5 items-end overflow-x-auto pb-1">${bars}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderQuickSites() {
+  const container = document.getElementById('quick-sites');
+  if (SITES.length === 0) return;
+  container.innerHTML = SITES.map(s => {
+    const isUp = s.last_status === 'UP';
+    const statusClass = s.last_status.toLowerCase();
+    const pingText = s.last_ping !== null ? `${s.last_ping}ms` : 'TIMEOUT';
+    
+    let uptimePct = 100;
+    if (s.total_count > 0) {
+      uptimePct = Math.round((s.up_count / s.total_count) * 100);
+    }
+
+    return `
+      <div class="flex items-center justify-between p-3 rounded-xl transition-all hover:bg-white/5" style="border:1px solid rgba(255,255,255,0.06);">
+        <div class="flex items-center gap-3">
+          <div class="relative"><div class="status-dot ${statusClass}"></div></div>
+          <div>
+            <div class="font-medium text-sm text-white">${s.name}</div>
+            <div class="text-xs font-mono text-slate-600">${s.url}</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="font-mono text-sm font-bold" style="color:${uptimePct>98?'var(--neon-green)':uptimePct>90?'#FFE600':'var(--alert-red)'}">${uptimePct}%</div>
+          <div class="text-xs font-mono text-slate-600">${pingText}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── PAGES ──
+function showPage(page) {
+  ['dashboard','sites','telegram'].forEach(p => {
+    document.getElementById('page-'+p).classList.add('hidden');
+    const nav = document.getElementById('nav-'+p);
+    if(nav) nav.classList.remove('active');
+  });
+  document.getElementById('page-'+page).classList.remove('hidden');
+  const nav = document.getElementById('nav-'+page);
+  if(nav) nav.classList.add('active');
+  
+  if(page==='sites') renderSites();
+  if(page==='dashboard') renderQuickSites();
+  // Close mobile sidebar
+  document.getElementById('main-sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-backdrop').classList.remove('backdrop-open');
+}
+
+function toggleMobileSidebar() {
+  document.getElementById('main-sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-backdrop').classList.toggle('backdrop-open');
+}
+
+// ── EDIT / DELETE ACTIONS ──
+function openEdit(id) {
+  const s = SITES.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('edit-site-name').value = s.name;
+  document.getElementById('edit-site-url').value = s.url;
+  document.getElementById('edit-site-freq').value = s.check_interval;
+  document.getElementById('edit-form').action = `/monitors/${id}/edit`;
+  openModal('edit-site-modal');
+}
+
+function deleteSite(id) {
+  if (confirm('Bu siteyi silmek istediğinize emin misiniz? Tüm geçmiş silinecektir.')) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/monitors/${id}/delete`;
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+
+function doPing(id) {
+  const s = SITES.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('ping-content').innerHTML = `
+    <div class="flex flex-col items-center gap-4">
+      <div class="relative w-20 h-20 flex items-center justify-center">
+        <div class="w-16 h-16 rounded-full border-2 flex items-center justify-center" style="border-color:var(--neon-green);animation:pulse 1s infinite;box-shadow:0 0 20px rgba(0,255,135,0.4)">
+          <svg width="24" height="24" style="color:var(--neon-green)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+      </div>
+      <p class="text-xs font-mono text-slate-500">Bağlanılıyor...</p>
+    </div>`;
+  openModal('ping-modal');
+
+  fetch(`/monitors/${id}/ping`, { method: 'POST' })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        document.getElementById('ping-content').innerHTML = `
+          <div class="flex flex-col items-center gap-4">
+            <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl" style="background:rgba(255,51,102,0.1);border:2px solid var(--alert-red);box-shadow:0 0 30px rgba(255,51,102,0.3)">✗</div>
+            <div>
+              <p class="font-bold text-xl font-display text-white mb-1">${s.name}</p>
+              <p class="text-xs font-mono text-slate-500 mb-3">${s.url}</p>
+              <div class="p-3 rounded-xl text-sm font-mono" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,51,102,0.2)">
+                <span style="color:var(--alert-red)">${data.error}</span>
+              </div>
+            </div>
+          </div>`;
+      } else {
+        const ok = data.status === 'UP';
+        const ms = data.response_time;
+        
+        // Update local SITES details so UI updates reactively when modal closes
+        s.last_status = data.status;
+        s.last_ping = ms;
+        
+        document.getElementById('ping-content').innerHTML = `
+          <div class="flex flex-col items-center gap-4">
+            <div class="w-16 h-16 rounded-full flex items-center justify-center text-2xl" style="background:${ok?'rgba(0,255,135,0.1)':'rgba(255,51,102,0.1)'};border:2px solid ${ok?'var(--neon-green)':'var(--alert-red)'};box-shadow:0 0 30px ${ok?'rgba(0,255,135,0.3)':'rgba(255,51,102,0.3)'}">${ok?'✓':'✗'}</div>
+            <div>
+              <p class="font-bold text-xl font-display text-white mb-1">${s.name}</p>
+              <p class="text-xs font-mono text-slate-500 mb-3">${s.url}</p>
+              <div class="p-3 rounded-xl text-sm font-mono" style="background:rgba(255,255,255,0.04);border:1px solid ${ok?'rgba(0,255,135,0.2)':'rgba(255,51,102,0.2)'}">
+                ${ok ? `<span style="color:var(--neon-green)">HTTP 200 OK</span> · <span class="text-white">${ms}ms</span>` : `<span style="color:var(--alert-red)">CONNECTION TIMEOUT</span>`}
+              </div>
+            </div>
+          </div>`;
+          
+        // Refresh cards behind modal
+        renderSites();
+        renderQuickSites();
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      closeModal('ping-modal');
+    });
+}
+
+// ── CHART LOADING ──
+function initChart(initialData) {
+  const ctx = document.getElementById('response-chart').getContext('2d');
+  
+  // Format labels: checked_at timestamps formatted as HH:MM
+  const labels = initialData.map(p => {
+    const date = new Date(p.checked_at);
+    return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  });
+  
+  const dataValues = initialData.map(p => p.response_time);
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+  gradient.addColorStop(0, 'rgba(0,255,135,0.3)');
+  gradient.addColorStop(1, 'rgba(0,255,135,0)');
+
+  responseChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Tepki Süresi (ms)',
+        data: dataValues,
+        borderColor: '#00FF87',
+        borderWidth: 2,
+        backgroundColor: gradient,
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#00FF87',
+        pointBorderColor: '#040B14',
+        pointBorderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        spanGaps: true
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0D1B2E',
+          borderColor: 'rgba(0,255,135,0.3)',
+          borderWidth: 1,
+          titleColor: '#94A3B8',
+          bodyColor: '#00FF87',
+          bodyFont: { family: "'JetBrains Mono'" },
+          callbacks: {
+            label: ctx => ctx.raw == null ? '⚠ TIMEOUT / ERROR' : `${ctx.raw} ms`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+          ticks: { color: '#475569', font: { family: "'JetBrains Mono'", size: 11 }, maxTicksLimit: 8 }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+          ticks: { color: '#475569', font: { family: "'JetBrains Mono'", size: 11 }, callback: v => v+'ms' }
+        }
+      }
+    }
+  });
+}
+
+function loadChartData(monitorId, btn) {
+  // Highlight active button in chart header
+  if (btn) {
+    document.querySelectorAll('[id^=chart-btn-]').forEach(b => {
+      b.style.cssText = '';
+      b.className = 'btn-ghost text-xs';
+    });
+    btn.style.cssText = 'color:var(--neon-green);border-color:rgba(0,255,135,0.3);';
+    btn.className = 'btn-ghost text-xs active';
+  }
+
+  fetch(`/api/pings/${monitorId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) return;
+      
+      const labels = data.map(p => {
+        const date = new Date(p.checked_at);
+        return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+      });
+      const values = data.map(p => p.response_time);
+      
+      responseChart.data.labels = labels;
+      responseChart.data.datasets[0].data = values;
+      
+      // Select green or red line depending on the last ping status
+      const hasFailure = data.length > 0 && data[data.length - 1].status === 'DOWN';
+      const color = hasFailure ? '#FF3366' : '#00FF87';
+      
+      const ctx = responseChart.canvas.getContext('2d');
+      const gradient = ctx.createLinearGradient(0,0,0,220);
+      gradient.addColorStop(0, hasFailure ? 'rgba(255,51,102,0.3)' : 'rgba(0,255,135,0.3)');
+      gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+      responseChart.data.datasets[0].borderColor = color;
+      responseChart.data.datasets[0].pointBackgroundColor = color;
+      responseChart.data.datasets[0].backgroundColor = gradient;
+      
+      responseChart.update();
+    })
+    .catch(err => console.error('Chart load error:', err));
+}
+
+// ── TOAST DISPLAY ──
+function openToast(msg, type='green') {
+  const existing = document.getElementById('toast-msg');
+  if(existing) existing.remove();
+  const t = document.createElement('div');
+  t.id = 'toast-msg';
+  const color = type==='green' ? 'rgba(0,255,135,0.9)' : 'rgba(255,51,102,0.9)';
+  const bg = type==='green' ? 'rgba(0,255,135,0.08)' : 'rgba(255,51,102,0.08)';
+  const border = type==='green' ? 'rgba(0,255,135,0.3)' : 'rgba(255,51,102,0.3)';
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;background:${bg};border:1px solid ${border};color:${color};padding:12px 20px;border-radius:12px;font-family:'JetBrains Mono',monospace;font-size:13px;backdrop-filter:blur(16px);box-shadow:0 4px 30px rgba(0,0,0,0.5);transition:all 0.3s;opacity:0;transform:translateY(10px);`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateY(0)'; });
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 4000);
+}
+
+// ── MODALS ──
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('active'); });
+});
+
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.active').forEach(m=>m.classList.remove('active'));
+});
+
+// ── INIT CLOCK & DATA ──
+function updateClock() {
+  const el = document.getElementById('dash-time');
+  if(el) el.textContent = new Date().toLocaleTimeString('tr-TR');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  renderSites();
+  renderQuickSites();
+
+  // Load chart data for the first site (if exists)
+  if (SITES.length > 0) {
+    const firstId = SITES[0].id;
+    fetch(`/api/pings/${firstId}`)
+      .then(res => res.json())
+      .then(data => {
+        initChart(data);
+      })
+      .catch(err => {
+        console.error(err);
+        initChart([]);
+      });
+  } else {
+    initChart([]);
+  }
+
+  // Handle flash messages
+  <% if (error) { %>
+    openToast("<%= error %>", "red");
+  <% } %>
+  <% if (success) { %>
+    openToast("<%= success %>", "green");
+  <% } %>
+});
+</script>
+
+<%- include('partials/footer') %>

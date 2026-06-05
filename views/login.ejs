@@ -1,0 +1,60 @@
+<%- include('partials/header') %>
+<div id="screen-auth" class="min-h-screen auth-bg flex items-center justify-center p-4">
+  <div class="w-full max-w-md animate-fade-up">
+    <!-- Logo -->
+    <div class="text-center mb-10">
+      <div class="flex items-center justify-center gap-3 mb-4">
+        <div class="relative w-12 h-12">
+          <div class="w-12 h-12 rounded-xl border-2 border-neon-green flex items-center justify-center glow-green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="3" fill="#00FF87"/>
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="#00FF87" stroke-width="1.5" fill="none" stroke-dasharray="4 2"/>
+            </svg>
+          </div>
+        </div>
+        <span class="text-2xl font-bold text-white font-display tracking-tight">Node<span class="text-glow-green" style="color:var(--neon-green)">Watch</span></span>
+      </div>
+      <p class="text-sm text-slate-500 font-mono">// uptime intelligence platform</p>
+    </div>
+
+    <!-- Auth Card -->
+    <div class="glass-card p-8" style="border-color:rgba(0,255,135,0.15);">
+      <!-- Tabs -->
+      <div class="flex gap-1 p-1 rounded-lg mb-8" style="background:rgba(255,255,255,0.04);">
+        <a href="/auth/login" class="flex-1 py-2.5 rounded-md text-sm font-semibold transition-all text-center" style="background:rgba(0,255,135,0.15);color:var(--neon-green);">Giriş Yap</a>
+        <a href="/auth/register" class="flex-1 py-2.5 rounded-md text-sm font-semibold transition-all text-slate-400 hover:text-slate-200 text-center">Kayıt Ol</a>
+      </div>
+
+      <!-- Login Form -->
+      <form action="/auth/login" method="POST" id="form-login">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-mono text-slate-500 mb-2 uppercase tracking-wider">Kullanıcı Adı</label>
+            <input type="text" name="username" class="glass-input" placeholder="admin veya user" required>
+          </div>
+          <div>
+            <label class="block text-xs font-mono text-slate-500 mb-2 uppercase tracking-wider">Şifre</label>
+            <input type="password" name="password" class="glass-input" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <% if (error) { %>
+          <div class="mt-3 p-3 rounded-lg text-sm font-mono" style="background:rgba(255,51,102,0.1);border:1px solid rgba(255,51,102,0.3);color:var(--alert-red);">
+            ❌ <%= error %>
+          </div>
+        <% } %>
+
+        <% if (success) { %>
+          <div class="mt-3 p-3 rounded-lg text-sm font-mono" style="background:rgba(0,255,135,0.1);border:1px solid rgba(0,255,135,0.3);color:var(--neon-green);">
+            ✓ <%= success %>
+          </div>
+        <% } %>
+
+        <button type="submit" class="btn-neon-solid w-full mt-6 py-3 text-sm">Giriş Yap →</button>
+      </form>
+    </div>
+
+    <p class="text-center text-xs font-mono text-slate-700 mt-6">© 2026 NodeWatch · v2.1.0 · SSL Şifreli</p>
+  </div>
+</div>
+<%- include('partials/footer') %>

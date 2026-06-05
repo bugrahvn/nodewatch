@@ -1,0 +1,227 @@
+<%- include('partials/header') %>
+
+<div id="screen-app" class="min-h-screen flex flex-col">
+
+  <!-- NAVBAR -->
+  <nav class="navbar px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <button id="mobile-menu-btn" class="md:hidden text-slate-400 hover:text-white transition-colors mr-2" onclick="toggleMobileSidebar()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg border border-neon-green flex items-center justify-center" style="box-shadow:0 0 10px rgba(0,255,135,0.3)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" fill="#00FF87"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="#00FF87" stroke-width="1.5" fill="none" stroke-dasharray="4 2"/></svg>
+        </div>
+        <span class="font-bold text-white text-lg font-display">Node<span style="color:var(--neon-green)">Watch</span></span>
+      </div>
+      <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full" style="background:rgba(255,230,0,0.08);border:1px solid rgba(255,230,0,0.2);">
+        <span class="text-xs font-mono" style="color:#FFE600">SÜPER ADMİN MODU</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- User -->
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);">
+        <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style="background:linear-gradient(135deg,var(--neon-green),var(--neon-cyan));color:#040B14;">
+          <%= user.username[0].toUpperCase() %>
+        </div>
+        <span class="text-sm font-medium text-slate-200"><%= user.username %></span>
+        <span class="badge-yellow text-xs">SÜPER ADMİN</span>
+      </div>
+      <a href="/auth/logout" class="btn-red py-2 px-3 text-xs text-center" style="display: inline-block;">Çıkış</a>
+    </div>
+  </nav>
+
+  <!-- BODY -->
+  <div class="flex flex-1">
+    <!-- Sidebar Backdrop for Mobile -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="toggleMobileSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="main-sidebar" class="sidebar flex flex-col pt-4 pb-6">
+      <div class="space-y-1 px-0 flex-1">
+        <a href="/dashboard" id="nav-dashboard" class="nav-item">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <div id="nav-admin-wrapper">
+          <div class="px-5 pt-4 pb-1">
+            <p class="text-xs font-mono text-slate-700 uppercase tracking-widest">Yönetim</p>
+          </div>
+          <a href="/admin" id="nav-admin" class="nav-item active" style="color:#FFE600;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Süper Admin Paneli
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- PAGE CONTENT -->
+    <main class="flex-1 overflow-y-auto p-6">
+      <div class="mb-8">
+        <div class="flex items-center gap-3 mb-1">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(255,230,0,0.1);border:1px solid rgba(255,230,0,0.2);">
+            <svg width="14" height="14" style="color:#FFE600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h1 class="text-2xl font-bold text-white font-display">Süper Admin Paneli</h1>
+        </div>
+        <p class="text-sm font-mono text-slate-500 mt-1 ml-11">// Tam sistem erişimi · Dikkatli kullan</p>
+      </div>
+
+      <!-- System Stats -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card" style="border-color:rgba(255,230,0,0.2);">
+          <div class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-3">Toplam Kullanıcı</div>
+          <div class="text-3xl font-bold font-mono" style="color:#FFE600;"><%= stats.total_users %></div>
+          <div class="text-xs text-slate-500 font-mono mt-1">Sistem kayıtlı</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(255,230,0,0.2);">
+          <div class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-3">Toplam Site</div>
+          <div class="text-3xl font-bold font-mono" style="color:#FFE600;"><%= stats.total_monitors %></div>
+          <div class="text-xs text-slate-500 font-mono mt-1">İzlenen siteler</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(255,230,0,0.2);">
+          <div class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-3">Aktif Bot</div>
+          <div class="text-3xl font-bold font-mono" style="color:#FFE600;"><%= stats.total_bots %></div>
+          <div class="text-xs text-slate-500 font-mono mt-1">Telegram bağlı</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(255,230,0,0.2);">
+          <div class="text-xs font-mono text-slate-500 uppercase tracking-wider mb-3">Sistem Uptime Oranı</div>
+          <div class="text-3xl font-bold font-mono" style="color:#FFE600;"><%= stats.avg_uptime %><span class="text-lg">%</span></div>
+          <div class="text-xs text-slate-500 font-mono mt-1">Toplam loglardan hesaplanan</div>
+        </div>
+      </div>
+
+      <!-- User Table -->
+      <div class="glass-card p-6">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="font-bold text-white font-display">Kullanıcı Yönetimi</h2>
+            <p class="text-xs font-mono text-slate-500 mt-0.5">Site limiti ve hesap yönetimi</p>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Kullanıcı</th>
+                <th>E-posta</th>
+                <th>Kayıt Tarihi</th>
+                <th>Site Sayısı</th>
+                <th>Limit</th>
+                <th>Rol</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% usersList.forEach(function(u) { %>
+                <tr>
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style="background:linear-gradient(135deg,rgba(0,255,135,0.2),rgba(0,245,255,0.2));color:var(--neon-green);border:1px solid rgba(0,255,135,0.2);">
+                        <%= u.username[0].toUpperCase() %>
+                      </div>
+                      <span class="font-mono text-sm text-white"><%= u.username %></span>
+                    </div>
+                  </td>
+                  <td class="font-mono text-xs text-slate-500"><%= u.username %>@nodewatch.local</td>
+                  <td class="font-mono text-xs text-slate-500"><%= new Date(u.created_at).toLocaleDateString('tr-TR') %></td>
+                  <td>
+                    <span class="font-mono text-sm font-bold <%= u.monitor_count > 0 ? 'text-white' : 'text-slate-600' %>"><%= u.monitor_count %></span>
+                    <span class="text-slate-600 font-mono text-xs"> / <%= u.monitor_limit === 999 ? '∞' : u.monitor_limit %></span>
+                  </td>
+                  <td>
+                    <div class="flex items-center gap-2">
+                      <div class="w-16 h-1.5 rounded-full" style="background:rgba(255,255,255,0.08);">
+                        <div class="h-1.5 rounded-full" style="background:linear-gradient(90deg,var(--neon-green),var(--neon-cyan)); width: <%= u.monitor_limit === 999 ? 100 : Math.min(100, (u.monitor_count / u.monitor_limit) * 100) %>%;"></div>
+                      </div>
+                      <span class="font-mono text-xs text-slate-500"><%= u.monitor_limit === 999 ? '∞' : u.monitor_limit %></span>
+                    </div>
+                  </td>
+                  <td>
+                    <% if (u.role === 'superadmin') { %>
+                      <span class="badge-yellow text-xs">SÜPER ADMİN</span>
+                    <% } else { %>
+                      <span class="badge-green text-xs">KULLANICI</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <button onclick="openLimitEdit('<%= u.id %>', '<%= u.username %>', <%= u.monitor_limit %>)" class="btn-neon text-xs" style="padding:4px 10px;font-size:11px;">Limit Düzenle</button>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Edit Limit Modal -->
+<div id="edit-limit-modal" class="modal-overlay">
+  <div class="modal-box" style="max-width:380px;">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-bold text-white font-display">Site Limiti Düzenle</h3>
+      <button onclick="closeModal('edit-limit-modal')" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white" style="background:rgba(255,255,255,0.06);">✕</button>
+    </div>
+    <form id="limit-form" action="" method="POST">
+      <p class="text-sm text-slate-400 font-mono mb-4">Kullanıcı: <span id="limit-modal-user" class="text-white"></span></p>
+      <div>
+        <label class="block text-xs font-mono text-slate-400 mb-2 uppercase tracking-wider">Yeni Limit</label>
+        <input type="number" name="monitor_limit" id="limit-modal-value" class="glass-input" min="1" max="999" required>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button type="button" onclick="closeModal('edit-limit-modal')" class="btn-ghost flex-1 py-3">İptal</button>
+        <button type="submit" class="btn-neon-solid flex-1 py-3">Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openLimitEdit(id, username, currentLimit) {
+  document.getElementById('limit-modal-user').textContent = username;
+  document.getElementById('limit-modal-value').value = currentLimit === 999 ? 5 : currentLimit;
+  document.getElementById('limit-form').action = `/admin/users/${id}/limit`;
+  openModal('edit-limit-modal');
+}
+
+function toggleMobileSidebar() {
+  document.getElementById('main-sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-backdrop').classList.toggle('backdrop-open');
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// ── TOAST DISPLAY ──
+function openToast(msg, type='green') {
+  const existing = document.getElementById('toast-msg');
+  if(existing) existing.remove();
+  const t = document.createElement('div');
+  t.id = 'toast-msg';
+  const color = type==='green' ? 'rgba(0,255,135,0.9)' : 'rgba(255,51,102,0.9)';
+  const bg = type==='green' ? 'rgba(0,255,135,0.08)' : 'rgba(255,51,102,0.08)';
+  const border = type==='green' ? 'rgba(0,255,135,0.3)' : 'rgba(255,51,102,0.3)';
+  t.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;background:${bg};border:1px solid ${border};color:${color};padding:12px 20px;border-radius:12px;font-family:'JetBrains Mono',monospace;font-size:13px;backdrop-filter:blur(16px);box-shadow:0 4px 30px rgba(0,0,0,0.5);transition:all 0.3s;opacity:0;transform:translateY(10px);`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateY(0)'; });
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 4000);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  <% if (error) { %>
+    openToast("<%= error %>", "red");
+  <% } %>
+  <% if (success) { %>
+    openToast("<%= success %>", "green");
+  <% } %>
+});
+</script>
+
+<%- include('partials/footer') %>
